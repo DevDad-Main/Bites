@@ -1,0 +1,34 @@
+{
+  "name": "bites",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/DevDad-Main/Bites#readme",
+  "bugs": {
+    "url": "https://github.com/DevDad-Main/Bites/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevDad-Main/Bites.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env server.ts",
+    "build": "tsc",
+    "start": "node --env-file=.env ./dist/server.ts"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "nanoid": "^5.1.6",
+    "redis": "^5.10.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.0.10",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
