@@ -1,4 +1,4 @@
-import app from "@/app";
+import app from "./app.js";
 import { logger } from "devdad-express-utils";
 
 const PORT = process.env.PORT || 3000;
@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 3000;
 app
   .listen(PORT, () => {
     logger.info(`Server is running on http://localhost:${PORT}`);
+    logger.info(`Redis Insight is running on http://localhost:8001`);
   })
   .on("error", (error: any) => {
     logger.error("Something went wrong while connecting to the server..", {

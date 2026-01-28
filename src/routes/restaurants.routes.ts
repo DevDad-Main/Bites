@@ -3,12 +3,14 @@ import { restaurantController } from "../controllers/restaurant.controllers.js";
 import { validate } from "../middleware/validation.middleware.js";
 import { RestaurantPostSchema } from "../schemas/restaurant.schema.js";
 
-const restaurantRouter = Router();
+const restaurantRouter: Router = Router();
 
 restaurantRouter.post(
-  "/fetch",
+  "/create",
   validate(RestaurantPostSchema),
-  restaurantController.fetch,
+  restaurantController.create,
 );
+
+restaurantRouter.get("/:restaurantId", restaurantController.fetch);
 
 export default restaurantRouter;
