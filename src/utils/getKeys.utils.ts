@@ -4,7 +4,7 @@
  * @returns A string joint by ':' with all the strings passed in
  */
 export function getKeyName(...args: string[]) {
-  return `bites:${args.join(":")}`;
+	return `bites:${args.join(":")}`;
 }
 
 /**
@@ -46,7 +46,16 @@ export const restaurantKeyById = (id: string) => getKeyName("restaurants", id);
 
 /**
  * Utility method to get the stored redis lists with the prefix 'reviews'
- * @param {string} id Unique keyword passed to reference in redis.
- * @returns The cached linked lists in the redis db by its given id.
+ * @param {string} id Unique restaurant id passed to reference in redis.
+ * @returns The cached linked lists of all reviews for a given restaurant id in the redis db.
  */
 export const reviewKeyById = (id: string) => getKeyName("reviews", id);
+
+/**
+ * Utility method to get the review details for a specific review.
+ * @param {string} id Unique review id passed to reference in redis.
+ * @returns The cached review data for the given id parameter.
+ */
+export const reviewDetailsKeyByID = (id: string) =>
+	getKeyName("review_details", id);
+
