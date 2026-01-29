@@ -98,4 +98,21 @@ export const reviewDetailsKeyByID = (id: string) =>
  * | "Japanese"       |
  * | "Indian"         |
  */
+
+/**
+ * Static utility method that just returns the cuisines key name.
+ * @returns {string} "cuisines"
+ */
 export const cuisinesKey = getKeyName("cuisines")
+/**
+ * 
+ * @param {name} string
+ * @returns A prefixed string with 'cuisines' and {name} passed into the parameter declaration.
+ */
+export const cuisineKey = (name: string) => getKeyName("cuisines", name)
+/**
+ * 
+ * @param {id} string
+ * @returns A prefixed string with 'restaurant_cuisines' and {id} passed into the parameter declaration.
+ */
+export const restaurantCuisinesKeyById = (id: string) => getKeyName("restaurant_cuisines", id)
