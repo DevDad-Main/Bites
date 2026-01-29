@@ -29,4 +29,6 @@ restaurantRouter.get(
 restaurantRouter.get("/fetch/:restaurantId/reviews", checkRestaurantExists, restaurantController.fetchRestaurantReviews
 )
 
+restaurantRouter.delete("/delete/:restaurantId/reviews/:reviewId", checkRestaurantExists, restaurantController.deleteRestaurantReview)
+
 export default restaurantRouter;
