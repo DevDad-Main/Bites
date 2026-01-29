@@ -8,27 +8,34 @@ import { ReviewPostSchema, type Review } from "../schemas/cuisine.schema.js";
 const restaurantRouter: Router = Router();
 
 restaurantRouter.post(
-	"/create",
-	validate(RestaurantPostSchema),
-	restaurantController.createRestaurantData,
+  "/create",
+  validate(RestaurantPostSchema),
+  restaurantController.createRestaurantData,
 );
 
 restaurantRouter.post(
-	"/create/:restaurantId/reviews",
-	checkRestaurantExists,
-	validate(ReviewPostSchema),
-	restaurantController.createRestaurantReview,
+  "/create/:restaurantId/reviews",
+  checkRestaurantExists,
+  validate(ReviewPostSchema),
+  restaurantController.createRestaurantReview,
 );
 
 restaurantRouter.get(
-	"/fetch/:restaurantId",
-	checkRestaurantExists,
-	restaurantController.fetchRestaurantData,
+  "/fetch/:restaurantId",
+  checkRestaurantExists,
+  restaurantController.fetchRestaurantData,
 );
 
-restaurantRouter.get("/fetch/:restaurantId/reviews", checkRestaurantExists, restaurantController.fetchRestaurantReviews
-)
+restaurantRouter.get(
+  "/fetch/:restaurantId/reviews",
+  checkRestaurantExists,
+  restaurantController.fetchRestaurantReviews,
+);
 
-restaurantRouter.delete("/delete/:restaurantId/reviews/:reviewId", checkRestaurantExists, restaurantController.deleteRestaurantReview)
+restaurantRouter.delete(
+  "/delete/:restaurantId/reviews/:reviewId",
+  checkRestaurantExists,
+  restaurantController.deleteRestaurantReview,
+);
 
 export default restaurantRouter;
