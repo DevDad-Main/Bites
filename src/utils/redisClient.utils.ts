@@ -1,26 +1,70 @@
-import { createClient, type RedisClientType } from "redis";
+import { createClient, RedisClientOptions, RedisClientType } from "redis";
 import { logger } from "devdad-express-utils";
 
-let client: RedisClientType | null = null;
+// 1. Define the version as a constant so TS can track it
+const RESP_VERSION = 3 as const;
+const MAX_REDIS_RETRIES = 3;
 
-// NOTE: Redis Client Singleton
+// Override the default arguments to stop conflict errors with RESP v2 and v3
+// The generic arguments are: <Modules, Functions, Scripts, Protocol>
+let client: RedisClientType<any, any, any, typeof RESP_VERSION> | null = null;
+
+const options: RedisClientOptions<any, any, any, typeof RESP_VERSION> = {
+	RESP: RESP_VERSION,
+	socket: {
+		reconnectStrategy(retries, cause) {
+			if (retries > MAX_REDIS_RETRIES) {
+				logger.error("Redis max connections retries reached. Closing Down.", { cause });
+				return cause;
+			}
+
+			const delay = Math.min(retries * 100, 3000);
+			logger.warn(`Redis reconnect attempt #${retries} in ${delay}ms`);
+			return delay;
+		},
+		connectTimeout: 10000,
+	},
+	clientSideCache: {
+		ttl: 0,
+		maxEntries: 0,
+		evictPolicy: "LRU"
+	},
+};
+
 export async function initializeRedisClient() {
-  if (!client) {
-    // client = createClient({
-    //   url: "specify cloud based url here",
-    // });
+	try {
+		if (!client) {
+			client = createClient(options);
 
-    client = createClient();
-    client.on("error", (error) => {
-      logger.error(error || "Something went wrong while connecting to redis.", {
-        error,
-      });
-    });
-    client.on("connect", () => {
-      logger.info("Redis Connected Successfully");
-    });
-    await client.connect();
-  }
+			client.on("error", (error: any) => {
+				logger.error("❌ Redis error", {
+					message: error.message,
+					code: error.code,
+				});
+			});
 
-  return client;
+			client.on("connect", () => {
+				logger.info("Redis Connected Successfully");
+			});
+
+			client.on("ready", () => {
+				logger.info("🟢 Redis ready");
+			});
+
+			client.on("reconnecting", () => {
+				logger.warn(`🔄 Redis is trying to reconnect..`);
+			});
+
+			await client.connect();
+		}
+		return client;
+	} catch (error) {
+		logger.error("Failed to connect to redis server..", { error });
+		// Clean up the client reference if connection fails
+		if (client) {
+			await client.quit().catch(() => { });
+			client = null;
+		}
+		throw error;
+	}
 }
