@@ -58,18 +58,27 @@ export const restaurantController = {
 
       const client = await initializeRedisClient();
       const restaurantKey = restaurantKeyById(restaurantId);
-      const [viewCount, restaurant] = await Promise.all([
+      const [viewCount, restaurant, cuisines] = await Promise.all([
         client.hIncrBy(restaurantKey, "viewCount", 1),
         client.hGetAll(restaurantKey),
+        client.sMembers(restaurantCuisinesKeyById(restaurantId)),
       ]);
 
       if (!restaurant) {
-        return sendError(res, "Failed To Find any Caches With that Key", 400);
+        return sendError(res, "Failed To Find any Caches With that Key", 404);
+      }
+
+      if (!cuisines) {
+        return sendError(
+          res,
+          "Failed to find any cuisines for this restaurant",
+          404,
+        );
       }
 
       return sendSuccess(
         res,
-        restaurant,
+        { ...restaurant, cuisines },
         "Restaurant Data Successfully Fetched From Cache",
         200,
       );
