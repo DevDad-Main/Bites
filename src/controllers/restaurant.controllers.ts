@@ -13,6 +13,7 @@ import {
   cuisinesKey,
   restaurantCuisinesKeyById,
   restaurantKeyById,
+  restaurantsByRatingKey,
   reviewDetailsKeyByID,
   reviewKeyById,
 } from "../utils/getKeys.utils.js";
@@ -41,9 +42,18 @@ export const restaurantController = {
         ]),
       ),
       client.hSet(restaurantKey, hashedData),
+      client.zAdd(restaurantsByRatingKey, {
+        score: 0,
+        value: id,
+      }),
     ]);
 
-    return sendSuccess(res, hashedData, "Data Successfully Posted", 200);
+    return sendSuccess(
+      res,
+      { ...hashedData, cuisines: data.cuisines },
+      "Data Successfully Posted",
+      200,
+    );
   }),
   //#endregion
 
@@ -107,6 +117,7 @@ export const restaurantController = {
       const reviewKey = reviewKeyById(restaurantId);
 
       const reviewDetailsKey = reviewDetailsKeyByID(reviewID);
+      const restaurantKey = restaurantKeyById(restaurantId);
       const reviewData = {
         id: reviewID,
         ...data,
@@ -114,9 +125,20 @@ export const restaurantController = {
         restaurantId,
       };
 
-      await Promise.all([
+      const [reviewCount, setResult, totalStars] = await Promise.all([
         client.lPush(reviewKey, reviewID),
         client.hSet(reviewDetailsKey, reviewData),
+        client.hIncrByFloat(restaurantKey, "totalStars", data.rating),
+      ]);
+
+      const averageRating = Number((totalStars / reviewCount).toFixed(1));
+
+      await Promise.all([
+        client.zAdd(restaurantsByRatingKey, {
+          score: averageRating,
+          value: restaurantId,
+        }),
+        client.hSet(restaurantKey, "avgStars", averageRating),
       ]);
 
       return sendSuccess(res, reviewData, "Review Successfully Added", 200);

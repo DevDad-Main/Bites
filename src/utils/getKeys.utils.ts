@@ -4,7 +4,7 @@
  * @returns A string joined by ':' with all the strings passed in
  */
 export function getKeyName(...args: string[]) {
-	return `bites:${args.join(":")}`;
+  return `bites:${args.join(":")}`;
 }
 
 /**
@@ -20,7 +20,7 @@ export function getKeyName(...args: string[]) {
  * HGETALL -> Returns all fields and values of the hash stored at a given key.
  * HMGET -> Returns the values at one or more given fields
  * HINCRBY -> Increments the value at a given field by the integer provided
- * 
+ *
  * Example: Restaurant Hash
  * Key: bites:restaurants:123
  * ----------------------------------------
@@ -62,7 +62,7 @@ export const reviewKeyById = (id: string) => getKeyName("reviews", id);
  * Utility method to get the review details for a specific review.
  * @param {string} id Unique review id passed to reference in redis.
  * @returns The cached review data for the given id parameter.
- * 
+ *
  * Example: Review Details Hash
  * Key: bites:review_details:987
  * ----------------------------------------
@@ -74,7 +74,7 @@ export const reviewKeyById = (id: string) => getKeyName("reviews", id);
  * | date       | "2026-01-29"           |
  */
 export const reviewDetailsKeyByID = (id: string) =>
-	getKeyName("review_details", id);
+  getKeyName("review_details", id);
 
 /**
  * Sets
@@ -103,16 +103,44 @@ export const reviewDetailsKeyByID = (id: string) =>
  * Static utility method that just returns the cuisines key name.
  * @returns {string} "cuisines"
  */
-export const cuisinesKey = getKeyName("cuisines")
+export const cuisinesKey = getKeyName("cuisines");
 /**
- * 
+ *
  * @param {name} string
  * @returns A prefixed string with 'cuisines' and {name} passed into the parameter declaration.
  */
-export const cuisineKey = (name: string) => getKeyName("cuisines", name)
+export const cuisineKey = (name: string) => getKeyName("cuisines", name);
 /**
- * 
+ *
  * @param {id} string
  * @returns A prefixed string with 'restaurant_cuisines' and {id} passed into the parameter declaration.
  */
-export const restaurantCuisinesKeyById = (id: string) => getKeyName("restaurant_cuisines", id)
+export const restaurantCuisinesKeyById = (id: string) =>
+  getKeyName("restaurant_cuisines", id);
+
+/**
+ * Sorted Sets
+ * - Ordered by a 'score'
+ * - Unique strings, allows for tracking unique items (no duplicates)
+ * - Leaderboard like table
+ * - - - - - - - - - - - -
+ * Redis Sorted Sets Cheat Sheet
+ * ZADD -> Adds a new member and associated score to a sorted set. If the member
+ * ZRANGE(low -> high) -> Returns members of a sorted set, sorted within a given range
+ * ZRANK -> Returns the rank of the provided member, assuming the sorted is in
+ * ZREVRANK -> Returns the rank of the provided member, assuming the sorted set is
+ *
+ * Example: Restaurants Sorted Set
+ * Key: restaurants:by_rating
+ * --------------------------------------
+ * | Member               | Score       |
+ * |----------------------|-------------|
+ * | "restaurant1"        | 3.2         |
+ * | "restaurant2"        | 5.2         |
+ * | "restaurant3"        | 7.2         |
+ */
+
+/**
+ * Static variable to return the restaurantsByRating redis key.
+ */
+export const restaurantsByRatingKey = getKeyName("restaurants_by_rating");
