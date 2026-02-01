@@ -21,24 +21,66 @@ import { Review } from "../schemas/cuisine.schema.js";
 
 export const restaurantController = {
   //#region Create Restaurant Data
+  /**
+   * @swagger
+   * /api/v1/restaurants/create:
+   *   post:
+   *     summary: Create a new restaurant
+   *     tags: [Restaurants]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - name
+   *               - location
+   *               - cuisines
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 example: "The Italian Place"
+   *               location:
+   *                 type: string
+   *                 example: "123 Main St, New York, NY"
+   *               cuisines:
+   *                 type: array
+   *                 items:
+   *                   type: string
+   *                 example: ["italian", "pizza"]
+   *     responses:
+   *       201:
+   *         description: Restaurant created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       400:
+   *         description: Bad request
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   createRestaurantData: catchAsync(async (req: Request, res: Response) => {
-    logger.info("Restaurant Fetch Handler Called.");
+    logger.info("Restaurant Create Handler Called.");
 
     const data = req.body as Restaurant;
     const client = await initializeRedisClient();
     const id = nanoid();
     const restaurantKey = restaurantKeyById(id);
 
-    const hashedData = { id, name: data.name, location: data.location };
+    const hashedData = { id, name: data.name.trim(), location: data.location.trim() };
     await Promise.all([
       ...data.cuisines.map((cuisine) =>
         Promise.all([
           //NOTE: Adds a new cuisines key 'bites:cuisines'
-          client.sAdd(cuisinesKey, cuisine),
+          client.sAdd(cuisinesKey, cuisine.trim()),
           //NOTE: Adds a new set value for individual cuisine type e.g 'bites:cuisines:french'
-          client.sAdd(cuisineKey(cuisine), id),
+          client.sAdd(cuisineKey(cuisine.trim()), id),
           //NOTE: We assign New Restaurant set where the id is the restaurant and value is the cuisines e.g 'bites:restaurant_cuisines:hUiaapEUFlEtK-gPdxDvs(id)'
-          client.sAdd(restaurantCuisinesKeyById(id), cuisine),
+          client.sAdd(restaurantCuisinesKeyById(id), cuisine.trim()),
         ]),
       ),
       client.hSet(restaurantKey, hashedData),
@@ -52,12 +94,39 @@ export const restaurantController = {
       res,
       { ...hashedData, cuisines: data.cuisines },
       "Data Successfully Posted",
-      200,
+      201,
     );
   }),
   //#endregion
 
   //#region Fetch Restaurant Data
+  /**
+   * @swagger
+   * /api/v1/restaurants/fetch/{restaurantId}:
+   *   get:
+   *     summary: Fetch restaurant data by ID
+   *     tags: [Restaurants]
+   *     parameters:
+   *       - in: path
+   *         name: restaurantId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Restaurant ID
+   *     responses:
+   *       200:
+   *         description: Restaurant data fetched successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       404:
+   *         description: Restaurant not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   fetchRestaurantData: async (
     req: Request<{ restaurantId: string }>,
     res: Response,
@@ -74,11 +143,11 @@ export const restaurantController = {
         client.sMembers(restaurantCuisinesKeyById(restaurantId)),
       ]);
 
-      if (!restaurant) {
-        return sendError(res, "Failed To Find any Caches With that Key", 404);
+      if (!restaurant || Object.keys(restaurant).length === 0) {
+        return sendError(res, "Restaurant not found", 404);
       }
 
-      if (!cuisines) {
+      if (!cuisines || cuisines.length === 0) {
         return sendError(
           res,
           "Failed to find any cuisines for this restaurant",
@@ -103,6 +172,51 @@ export const restaurantController = {
   //#endregion
 
   //#region Create Restaurant Review
+  /**
+   * @swagger
+   * /api/v1/restaurants/create/{restaurantId}/reviews:
+   *   post:
+   *     summary: Create a review for a restaurant
+   *     tags: [Restaurants]
+   *     parameters:
+   *       - in: path
+   *         name: restaurantId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Restaurant ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - review
+   *               - rating
+   *             properties:
+   *               review:
+   *                 type: string
+   *                 example: "Amazing food and great service!"
+   *               rating:
+   *                 type: number
+   *                 minimum: 1
+   *                 maximum: 10
+   *                 example: 8
+   *     responses:
+   *       201:
+   *         description: Review created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       404:
+   *         description: Restaurant not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   createRestaurantReview: async (
     req: Request<{ restaurantId: string }>,
     res: Response,
@@ -120,7 +234,8 @@ export const restaurantController = {
       const restaurantKey = restaurantKeyById(restaurantId);
       const reviewData = {
         id: reviewID,
-        ...data,
+        review: data.review.trim(),
+        rating: data.rating,
         timestamp: Date.now(),
         restaurantId,
       };
@@ -131,7 +246,7 @@ export const restaurantController = {
         client.hIncrByFloat(restaurantKey, "totalStars", data.rating),
       ]);
 
-      const averageRating = Number((totalStars / reviewCount).toFixed(1));
+      const averageRating = Number((Number(totalStars) / Number(reviewCount)).toFixed(1));
 
       await Promise.all([
         client.zAdd(restaurantsByRatingKey, {
@@ -141,7 +256,7 @@ export const restaurantController = {
         client.hSet(restaurantKey, "avgStars", averageRating),
       ]);
 
-      return sendSuccess(res, reviewData, "Review Successfully Added", 200);
+      return sendSuccess(res, reviewData, "Review Successfully Added", 201);
     } catch (error: any) {
       logger.error(
         error.message ||
@@ -154,6 +269,48 @@ export const restaurantController = {
   //#endregion
 
   //#region Fetch Restaurant Reviews
+  /**
+   * @swagger
+   * /api/v1/restaurants/fetch/{restaurantId}/reviews:
+   *   get:
+   *     summary: Fetch reviews for a restaurant with pagination
+   *     tags: [Restaurants]
+   *     parameters:
+   *       - in: path
+   *         name: restaurantId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Restaurant ID
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Page number for pagination
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 10
+   *         description: Number of reviews per page
+   *     responses:
+   *       200:
+   *         description: Reviews fetched successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       404:
+   *         description: Restaurant not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   fetchRestaurantReviews: async (
     req: Request<{ restaurantId: string }>,
     res: Response,
@@ -163,22 +320,30 @@ export const restaurantController = {
       const { restaurantId } = req.params;
       const { page = 1, limit = 10 } = req.query;
 
-      const startIndex = (Number(page) - 1) * Number(limit);
-      const end = startIndex * Number(limit) - 1;
+      const pageNum = Number(page);
+      const limitNum = Number(limit);
+
+      if (isNaN(pageNum) || pageNum < 1) {
+        return sendError(res, "Page must be a positive number", 400);
+      }
+
+      if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+        return sendError(res, "Limit must be a number between 1 and 100", 400);
+      }
+
+      const startIndex = (pageNum - 1) * limitNum;
+      const end = startIndex + limitNum - 1;
 
       const client = await initializeRedisClient();
       const reviewKey = reviewKeyById(restaurantId);
       const reviewIds = await client.lRange(reviewKey, startIndex, end);
 
-      if (!reviewIds) {
-        return sendError(
+      if (!reviewIds || reviewIds.length === 0) {
+        return sendSuccess(
           res,
-          "Unsuccessful redis lookup. No Review IDs Found.",
-          400,
-          [
-            "Please try to submit a review before attempting to fetch any data.",
-            "No Data Found.",
-          ],
+          [],
+          "No Reviews Found",
+          200,
         );
       }
 
@@ -186,18 +351,20 @@ export const restaurantController = {
         reviewIds.map((id) => client.hGetAll(reviewDetailsKeyByID(id))),
       );
 
-      if (reviews.length === 0) {
+      const validReviews = reviews.filter(review => review && Object.keys(review).length > 0);
+
+      if (validReviews.length === 0) {
         return sendSuccess(
           res,
-          {},
-          "No Reviews Found, Please ensure you have submitted a review befre trying to fetch them.",
+          [],
+          "No Reviews Found",
           200,
         );
       }
 
-      logger.info("REVIEWS FOUND: ", { reviews });
+      logger.info("REVIEWS FOUND: ", { reviews: validReviews });
 
-      return sendSuccess(res, reviews, "Reviews Fetched Successfully", 200);
+      return sendSuccess(res, validReviews, "Reviews Fetched Successfully", 200);
     } catch (error: any) {
       logger.error(
         error.message ||
@@ -210,6 +377,39 @@ export const restaurantController = {
   //#endregion
 
   //#region Delete Restaurant Review
+  /**
+   * @swagger
+   * /api/v1/restaurants/delete/{restaurantId}/reviews/{reviewId}:
+   *   delete:
+   *     summary: Delete a review for a restaurant
+   *     tags: [Restaurants]
+   *     parameters:
+   *       - in: path
+   *         name: restaurantId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Restaurant ID
+   *       - in: path
+   *         name: reviewId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Review ID
+   *     responses:
+   *       200:
+   *         description: Review deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       404:
+   *         description: Review not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   deleteRestaurantReview: async (
     req: Request<{ restaurantId: string; reviewId: string }>,
     res: Response,
@@ -247,11 +447,59 @@ export const restaurantController = {
   //#endregion
 
   //#region Fetch Restaruant Reviews
+  /**
+   * @swagger
+   * /api/v1/restaurants/fetch/restaurant-ratings:
+   *   get:
+   *     summary: Fetch restaurants sorted by ratings with pagination
+   *     tags: [Restaurants]
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           default: 1
+   *         description: Page number for pagination
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 100
+   *           default: 10
+   *         description: Number of restaurants per page
+   *     responses:
+   *       200:
+   *         description: Restaurant ratings fetched successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       400:
+   *         description: Bad request
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   fetchRestaurantRatings: catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
       const { page = 1, limit = 10 } = req.query;
-      const start = (Number(page) - 1) * Number(limit);
-      const end = start + Number(limit);
+
+      const pageNum = Number(page);
+      const limitNum = Number(limit);
+
+      if (isNaN(pageNum) || pageNum < 1) {
+        return sendError(res, "Page must be a positive number", 400);
+      }
+
+      if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+        return sendError(res, "Limit must be a number between 1 and 100", 400);
+      }
+
+      const start = (pageNum - 1) * limitNum;
+      const end = start + limitNum - 1;
       const client = await initializeRedisClient();
       const restaurantIds = await client.zRange(
         restaurantsByRatingKey,
@@ -260,19 +508,25 @@ export const restaurantController = {
         { REV: true },
       );
 
+      if (!restaurantIds || restaurantIds.length === 0) {
+        return sendSuccess(res, [], "No restaurants found", 200);
+      }
+
       const restaurants = await Promise.all(
         restaurantIds.map((id) => client.hGetAll(restaurantKeyById(id))),
       );
 
-      if (restaurants.length === 0) {
-        return sendError(res, "Faild to fetch any restaurant reviews.", 404, [
-          "Please make sure you have submitted some reviews before trying to fetch the ratings.",
-        ]);
+      const validRestaurants = restaurants.filter(restaurant => 
+        restaurant && Object.keys(restaurant).length > 0
+      );
+
+      if (validRestaurants.length === 0) {
+        return sendSuccess(res, [], "No restaurants found", 200);
       }
 
       return sendSuccess(
         res,
-        restaurants,
+        validRestaurants,
         "Successfully fetched restaurant ratings",
         200,
       );
