@@ -5,7 +5,7 @@ A beginner-friendly Express.js API that demonstrates Redis integration through a
 ## 🎯 What You'll Learn
 
 - Setting up Redis with Express.js
-- Redis data structures: Hashes, Sets, and Lists (Plus more, WIP)
+- Redis data structures: Hashes, Sets, Lists, and Bloom Filters
 - CRUD operations using Redis commands
 - RESTful API design with TypeScript
 - Middleware for validation and error handling
@@ -46,14 +46,19 @@ A beginner-friendly Express.js API that demonstrates Redis integration through a
    ```
 
 5. Create Redis search index (required for search functionality)
-   ```bash
-   pnpm dlx tsx src/seed/createIndex.seed.ts
-   ```
+    ```bash
+    pnpm dlx tsx src/seed/createIndex.seed.ts
+    ```
 
-6. Run the application
-   ```bash
-   npm run dev
-   ```
+6. Initialize Bloom Filter (required for duplicate restaurant detection)
+    ```bash
+    pnpm dlx tsx src/seed/bloomFilter.seed.ts
+    ```
+
+7. Run the application
+    ```bash
+    npm run dev
+    ```
 
 Your API will be running at `http://localhost:3000` 🎉
 
@@ -63,7 +68,7 @@ Your API will be running at `http://localhost:3000` 🎉
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/v1/restaurants` | Create a new restaurant |
+| `POST` | `/api/v1/restaurants` | Create a new restaurant (prevents duplicates using Bloom Filter) |
 | `GET` | `/api/v1/restaurants/:restaurantId` | Fetch restaurant details (increments view count) |
 
 ### Restaurant Reviews
@@ -152,6 +157,9 @@ src/
 ├── schemas/                    # Zod validation schemas
 │   ├── restaurant.schema.ts
 │   └── cuisine.schema.ts
+├── seed/                       # Database setup scripts
+│   ├── createIndex.seed.ts
+│   └── bloomFilter.seed.ts
 └── utils/                      # Utility functions
     ├── getKeys.utils.ts
     └── redisClient.utils.ts
@@ -173,6 +181,7 @@ This project demonstrates several Redis patterns:
 - **Sets** (`bites:cuisines`, `bites:cuisines:{type}`) - Manage cuisine types and relationships
 - **Lists** (`bites:restaurant:{id}:reviews`) - Store review IDs for pagination
 - **Counters** - Track view counts using `HINCRBY`
+- **Bloom Filters** (`bites:bloom_restaurants`) - Efficient duplicate detection for restaurants
 
 ## 🛠️ Development Scripts
 
@@ -199,6 +208,22 @@ This command will:
 - Enable text search on restaurant names and numeric sorting by ratings
 
 **Note**: You only need to run this once during initial setup, or when you want to recreate the index structure.
+
+### Creating Bloom Filter
+
+The project uses Bloom Filters for efficient duplicate restaurant detection:
+
+```bash
+# From the root directory, run:
+pnpm dlx tsx src/seed/bloomFilter.seed.ts
+```
+
+This command will:
+- Delete any existing bloom filter (safe to run multiple times)
+- Create a new bloom filter with 0.01% error rate and 1,000,000 capacity
+- Enable fast O(1) membership testing to prevent duplicate restaurants
+
+**Note**: This only needs to be run once during setup. The bloom filter prevents restaurants with identical name+location combinations from being created.
 
 ## 🤝 Contributing
 
