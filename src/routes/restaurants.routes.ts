@@ -7,6 +7,11 @@ import { ReviewPostSchema, type Review } from "../schemas/cuisine.schema.js";
 
 const restaurantRouter: Router = Router();
 
+restaurantRouter.get(
+  "/fetch/restaurant-ratings",
+  restaurantController.fetchRestaurantRatings,
+);
+
 restaurantRouter.post(
   "/create",
   validate(RestaurantPostSchema),

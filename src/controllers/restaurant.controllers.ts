@@ -245,4 +245,38 @@ export const restaurantController = {
     }
   },
   //#endregion
+
+  //#region Fetch Restaruant Reviews
+  fetchRestaurantRatings: catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { page = 1, limit = 10 } = req.query;
+      const start = (Number(page) - 1) * Number(limit);
+      const end = start + Number(limit);
+      const client = await initializeRedisClient();
+      const restaurantIds = await client.zRange(
+        restaurantsByRatingKey,
+        start,
+        end,
+        { REV: true },
+      );
+
+      const restaurants = await Promise.all(
+        restaurantIds.map((id) => client.hGetAll(restaurantKeyById(id))),
+      );
+
+      if (restaurants.length === 0) {
+        return sendError(res, "Faild to fetch any restaurant reviews.", 404, [
+          "Please make sure you have submitted some reviews before trying to fetch the ratings.",
+        ]);
+      }
+
+      return sendSuccess(
+        res,
+        restaurants,
+        "Successfully fetched restaurant ratings",
+        200,
+      );
+    },
+  ),
+  //#endregion
 };
