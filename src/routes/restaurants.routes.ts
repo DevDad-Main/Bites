@@ -1,9 +1,13 @@
 import { Router } from "express";
 import { restaurantController } from "../controllers/restaurant.controllers.js";
 import { validate } from "../middleware/validation.middleware.js";
-import { RestaurantPostSchema } from "../schemas/restaurant.schema.js";
+import {
+  RestaurantPostSchema,
+  RestaurantDetails,
+  RestaurantDetailsSchema,
+} from "../schemas/restaurant.schema.js";
 import { checkRestaurantExists } from "@/middleware/checkRestaurantId.middleware.js";
-import { ReviewPostSchema, type Review } from "../schemas/cuisine.schema.js";
+import { ReviewPostSchema } from "../schemas/cuisine.schema.js";
 
 const restaurantRouter: Router = Router();
 
@@ -29,6 +33,12 @@ restaurantRouter.get(
   restaurantController.fetchRestaurantReviews,
 );
 
+restaurantRouter.get(
+  "/fetch/:restaurantId/details",
+  checkRestaurantExists,
+  restaurantController.fetchRestaurantDetails,
+);
+
 restaurantRouter.post(
   "/create",
   validate(RestaurantPostSchema),
@@ -46,6 +56,13 @@ restaurantRouter.delete(
   "/delete/:restaurantId/reviews/:reviewId",
   checkRestaurantExists,
   restaurantController.deleteRestaurantReview,
+);
+
+restaurantRouter.post(
+  "/create/:restaurantId/details",
+  checkRestaurantExists,
+  validate(RestaurantDetailsSchema),
+  restaurantController.createRestaurantDetails,
 );
 
 export default restaurantRouter;

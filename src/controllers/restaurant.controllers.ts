@@ -5,13 +5,14 @@ import {
   sendSuccess,
 } from "devdad-express-utils";
 import { NextFunction, Request, Response } from "express";
-import { Restaurant } from "../schemas/restaurant.schema.js";
+import { Restaurant, RestaurantDetails } from "../schemas/restaurant.schema.js";
 import { initializeRedisClient } from "../utils/redisClient.utils.js";
 import { nanoid } from "nanoid";
 import {
   cuisineKey,
   cuisinesKey,
   restaurantCuisinesKeyById,
+  restaurantDetailsKeyById,
   restaurantKeyById,
   restaurantsByRatingKey,
   reviewDetailsKeyByID,
@@ -757,10 +758,133 @@ export const restaurantController = {
   //#endregion
 
   //#region Fetch Restaurant Details
+  /**
+   * @swagger
+   * /api/v1/restaurants/fetch/{restaurantId}/details:
+   *   get:
+   *     summary: Fetch detailed information for a restaurant
+   *     tags: [Restaurants]
+   *     parameters:
+   *       - in: path
+   *         name: restaurantId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Restaurant ID
+   *     responses:
+   *       200:
+   *         description: Restaurant details fetched successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       404:
+   *         description: Restaurant details not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   fetchRestaurantDetails: async (
     req: Request<{ restaurantId: string }>,
     res: Response,
     next: NextFunction,
-  ) => {},
+  ) => {
+    try {
+      const { restaurantId } = req.params;
+      const client = await initializeRedisClient();
+      const restaurantDetailsKey = restaurantDetailsKeyById(restaurantId);
+
+      const redisJsonData = await client.json.get(restaurantDetailsKey);
+
+      return sendSuccess(
+        res,
+        redisJsonData,
+        "Successfully Fetched Restaurant Details",
+        200,
+      );
+    } catch (error) {
+      logger.error("Failed to create restaurant details.", { error });
+      next(error);
+    }
+  },
+  //#endregion
+
+  //#region Create Restaurant Details
+  /**
+   * @swagger
+   * /api/v1/restaurants/create/{restaurantId}/details:
+   *   post:
+   *     summary: Create detailed information for a restaurant
+   *     tags: [Restaurants]
+   *     parameters:
+   *       - in: path
+   *         name: restaurantId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Restaurant ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             description: Restaurant details object
+   *     responses:
+   *       200:
+   *         description: Restaurant details created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       400:
+   *         description: Bad request
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  createRestaurantDetails: async (
+    req: Request<{ restaurantId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { restaurantId } = req.params;
+      const data = req.body as RestaurantDetails;
+
+      const client = await initializeRedisClient();
+      const restaurantDetailsKey = restaurantDetailsKeyById(restaurantId);
+
+      const redisJsonData = await client.json.set(
+        restaurantDetailsKey,
+        "$",
+        data,
+      );
+
+      return sendSuccess(
+        res,
+        redisJsonData,
+        "Successfully Created Restaurant Details",
+        200,
+      );
+    } catch (error) {
+      logger.error("Failed to create restaurant details.", { error });
+      next(error);
+    }
+  },
   //#endregion
 };
