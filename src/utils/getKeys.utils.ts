@@ -198,3 +198,6 @@ export const weatherKeyById = (id: string) => getKeyName("weather", id);
 
 export const restaurantDetailsKeyById = (id: string) =>
   getKeyName("restaurant_details", id);
+
+//NOTE: Add the Redis searching documentation
+export const restaurantsIndexKey = getKeyName("idx", "restaurants");

@@ -45,7 +45,12 @@ A beginner-friendly Express.js API that demonstrates Redis integration through a
    redis-server
    ```
 
-5. Run the application
+5. Create Redis search index (required for search functionality)
+   ```bash
+   pnpm dlx tsx src/seed/createIndex.seed.ts
+   ```
+
+6. Run the application
    ```bash
    npm run dev
    ```
@@ -75,6 +80,21 @@ Your API will be running at `http://localhost:3000` 🎉
 |--------|----------|-------------|
 | `GET` | `/api/v1/cuisines` | Get all available cuisine types |
 | `GET` | `/api/v1/cuisines/:cuisineType` | Get restaurants by cuisine type |
+
+### Restaurant Search
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/restaurants/search?query={text}` | Search restaurants by name using Redis search index |
+
+### Restaurant Management
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/restaurants/create/{restaurantId}/details` | Create detailed information for a restaurant |
+| `GET` | `/api/v1/restaurants/fetch/{restaurantId}/details` | Fetch detailed information for a restaurant |
+| `GET` | `/api/v1/restaurants/fetch/{restaurantId}/weather` | Get weather information for restaurant location |
+| `GET` | `/api/v1/restaurants/fetch/restaurant-ratings` | Get restaurants sorted by ratings with pagination |
 
 ## 💡 Usage Examples
 
@@ -106,6 +126,12 @@ curl -X POST http://localhost:3000/api/v1/restaurants/{restaurantId}/reviews \
 
 ```bash
 curl http://localhost:3000/api/v1/restaurants/{restaurantId}
+```
+
+### Search Restaurants
+
+```bash
+curl "http://localhost:3000/api/v1/restaurants/search?query=italian"
 ```
 
 ## 🏗️ Project Structure
@@ -155,6 +181,24 @@ npm run dev      # Start development server with hot reload
 npm run build    # Compile TypeScript to JavaScript
 npm run start    # Run production build
 ```
+
+## 📋 Database Setup
+
+### Creating Redis Search Index
+
+This project uses Redis Search for full-text search capabilities. Before using the search functionality, you need to create the search index:
+
+```bash
+# From the root directory, run:
+pnpm dlx tsx src/seed/createIndex.seed.ts
+```
+
+This command will:
+- Drop any existing index (safe to run multiple times)
+- Create a new search index for restaurants with fields: id, name, and avgStars
+- Enable text search on restaurant names and numeric sorting by ratings
+
+**Note**: You only need to run this once during initial setup, or when you want to recreate the index structure.
 
 ## 🤝 Contributing
 

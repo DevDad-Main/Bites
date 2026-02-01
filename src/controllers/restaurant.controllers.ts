@@ -15,6 +15,7 @@ import {
   restaurantDetailsKeyById,
   restaurantKeyById,
   restaurantsByRatingKey,
+  restaurantsIndexKey,
   reviewDetailsKeyByID,
   reviewKeyById,
   weatherKeyById,
@@ -886,5 +887,62 @@ export const restaurantController = {
       next(error);
     }
   },
+  //#endregion
+
+  //#region Search For Restaurants Using Indexs
+  /**
+   * @swagger
+   * /api/v1/restaurants/search:
+   *   get:
+   *     summary: Search for restaurants by name using Redis search index
+   *     tags: [Restaurants]
+   *     description: Uses RediSearch to find restaurants matching the query string
+   *     parameters:
+   *       - in: query
+   *         name: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Search query for restaurant name
+   *         example: "italian"
+   *     responses:
+   *       200:
+   *         description: Search results returned successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Success'
+   *       400:
+   *         description: Bad request - missing query parameter
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  searchForRestaurants: catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { query } = req.query;
+
+      const client = await initializeRedisClient();
+
+      const results = await client.ft.search(
+        restaurantsIndexKey,
+        `@name:${query}`,
+      );
+
+      return sendSuccess(
+        res,
+        results,
+        "Successfully searched for restaurants",
+        200,
+      );
+    },
+  ),
   //#endregion
 };

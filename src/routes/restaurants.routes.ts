@@ -39,6 +39,8 @@ restaurantRouter.get(
   restaurantController.fetchRestaurantDetails,
 );
 
+restaurantRouter.get("/search", restaurantController.searchForRestaurants);
+
 restaurantRouter.post(
   "/create",
   validate(RestaurantPostSchema),
