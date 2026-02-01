@@ -201,3 +201,5 @@ export const restaurantDetailsKeyById = (id: string) =>
 
 //NOTE: Add the Redis searching documentation
 export const restaurantsIndexKey = getKeyName("idx", "restaurants");
+
+export const restaurantBloomKey = getKeyName("bloom_restaurants");

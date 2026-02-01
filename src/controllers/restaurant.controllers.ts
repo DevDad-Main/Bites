@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 import {
   cuisineKey,
   cuisinesKey,
+  restaurantBloomKey,
   restaurantCuisinesKeyById,
   restaurantDetailsKeyById,
   restaurantKeyById,
@@ -74,6 +75,15 @@ export const restaurantController = {
     const id = nanoid();
     const restaurantKey = restaurantKeyById(id);
 
+    const bloomString = `${data.name}:${data.location}`;
+    const seenBefore = await client.bf.exists(restaurantBloomKey, bloomString);
+
+    if (seenBefore) {
+      return sendError(res, "Restaurant already exists", 409, [
+        `Restaurant Already Exisits: '${bloomString}' `,
+      ]);
+    }
+
     const hashedData = {
       id,
       name: data.name.trim(),
@@ -95,6 +105,8 @@ export const restaurantController = {
         score: 0,
         value: id,
       }),
+      //NOTE: Add the bloom filter so we can check if the restaurant exists
+      client.bf.add(restaurantBloomKey, bloomString),
     ]);
 
     return sendSuccess(
