@@ -16,6 +16,7 @@ import {
   restaurantsByRatingKey,
   reviewDetailsKeyByID,
   reviewKeyById,
+  weatherKeyById,
 } from "../utils/getKeys.utils.js";
 import { Review } from "../schemas/cuisine.schema.js";
 
@@ -71,7 +72,11 @@ export const restaurantController = {
     const id = nanoid();
     const restaurantKey = restaurantKeyById(id);
 
-    const hashedData = { id, name: data.name.trim(), location: data.location.trim() };
+    const hashedData = {
+      id,
+      name: data.name.trim(),
+      location: data.location.trim(),
+    };
     await Promise.all([
       ...data.cuisines.map((cuisine) =>
         Promise.all([
@@ -246,7 +251,9 @@ export const restaurantController = {
         client.hIncrByFloat(restaurantKey, "totalStars", data.rating),
       ]);
 
-      const averageRating = Number((Number(totalStars) / Number(reviewCount)).toFixed(1));
+      const averageRating = Number(
+        (Number(totalStars) / Number(reviewCount)).toFixed(1),
+      );
 
       await Promise.all([
         client.zAdd(restaurantsByRatingKey, {
@@ -339,32 +346,29 @@ export const restaurantController = {
       const reviewIds = await client.lRange(reviewKey, startIndex, end);
 
       if (!reviewIds || reviewIds.length === 0) {
-        return sendSuccess(
-          res,
-          [],
-          "No Reviews Found",
-          200,
-        );
+        return sendSuccess(res, [], "No Reviews Found", 200);
       }
 
       const reviews = await Promise.all(
         reviewIds.map((id) => client.hGetAll(reviewDetailsKeyByID(id))),
       );
 
-      const validReviews = reviews.filter(review => review && Object.keys(review).length > 0);
+      const validReviews = reviews.filter(
+        (review) => review && Object.keys(review).length > 0,
+      );
 
       if (validReviews.length === 0) {
-        return sendSuccess(
-          res,
-          [],
-          "No Reviews Found",
-          200,
-        );
+        return sendSuccess(res, [], "No Reviews Found", 200);
       }
 
       logger.info("REVIEWS FOUND: ", { reviews: validReviews });
 
-      return sendSuccess(res, validReviews, "Reviews Fetched Successfully", 200);
+      return sendSuccess(
+        res,
+        validReviews,
+        "Reviews Fetched Successfully",
+        200,
+      );
     } catch (error: any) {
       logger.error(
         error.message ||
@@ -516,8 +520,8 @@ export const restaurantController = {
         restaurantIds.map((id) => client.hGetAll(restaurantKeyById(id))),
       );
 
-      const validRestaurants = restaurants.filter(restaurant => 
-        restaurant && Object.keys(restaurant).length > 0
+      const validRestaurants = restaurants.filter(
+        (restaurant) => restaurant && Object.keys(restaurant).length > 0,
       );
 
       if (validRestaurants.length === 0) {
@@ -532,5 +536,231 @@ export const restaurantController = {
       );
     },
   ),
+  //#endregion
+
+  //#region Fetch Weather For A Restaurant
+  /**
+   * @swagger
+   * /api/v1/restaurants/fetch/{restaurantId}/weather:
+   *   get:
+   *     summary: Fetch weather information for a restaurant
+   *     tags: [Restaurants]
+   *     description: Retrieves current weather data for a restaurant's location. Data is cached for 10 minutes to optimize API calls.
+   *     parameters:
+   *       - in: path
+   *         name: restaurantId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Restaurant ID
+   *     responses:
+   *       200:
+   *         description: Weather data fetched successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Successfully fetched weather for restaurant123"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     coord:
+   *                       type: object
+   *                       properties:
+   *                         lon:
+   *                           type: number
+   *                           example: -0.1257
+   *                         lat:
+   *                           type: number
+   *                           example: 51.5085
+   *                     weather:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           id:
+   *                             type: number
+   *                             example: 803
+   *                           main:
+   *                             type: string
+   *                             example: "Clouds"
+   *                           description:
+   *                             type: string
+   *                             example: "broken clouds"
+   *                           icon:
+   *                             type: string
+   *                             example: "04d"
+   *                     base:
+   *                       type: string
+   *                       example: "stations"
+   *                     main:
+   *                       type: object
+   *                       properties:
+   *                         temp:
+   *                           type: number
+   *                           example: 15.6
+   *                         feels_like:
+   *                           type: number
+   *                           example: 15.2
+   *                         temp_min:
+   *                           type: number
+   *                           example: 14.5
+   *                         temp_max:
+   *                           type: number
+   *                           example: 16.8
+   *                         pressure:
+   *                           type: number
+   *                           example: 1012
+   *                         humidity:
+   *                           type: number
+   *                           example: 78
+   *                     visibility:
+   *                       type: number
+   *                       example: 10000
+   *                     wind:
+   *                       type: object
+   *                       properties:
+   *                         speed:
+   *                           type: number
+   *                           example: 3.6
+   *                         deg:
+   *                           type: number
+   *                           example: 240
+   *                     clouds:
+   *                       type: object
+   *                       properties:
+   *                         all:
+   *                           type: number
+   *                           example: 75
+   *                     dt:
+   *                       type: number
+   *                       example: 1643673600
+   *                     sys:
+   *                       type: object
+   *                       properties:
+   *                         type:
+   *                           type: number
+   *                           example: 2
+   *                         id:
+   *                           type: number
+   *                           example: 2075535
+   *                         country:
+   *                           type: string
+   *                           example: "GB"
+   *                         sunrise:
+   *                           type: number
+   *                           example: 1643632000
+   *                         sunset:
+   *                           type: number
+   *                           example: 1643664000
+   *                     timezone:
+   *                       type: number
+   *                       example: 0
+   *                     id:
+   *                       type: number
+   *                       example: 2643743
+   *                     name:
+   *                       type: string
+   *                       example: "London"
+   *                     cod:
+   *                       type: number
+   *                       example: 200
+   *       404:
+   *         description: Restaurant not found or missing coordinates
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       502:
+   *         description: Weather API error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  fetchWeatherForARestaurant: async (
+    req: Request<{ restaurantId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { restaurantId } = req.params;
+
+      const client = await initializeRedisClient();
+      const weatherKey = weatherKeyById(restaurantId);
+
+      //NOTE: If we have a cache already we return it to users.. Caches last for 10mins
+      const cachedWeather = await client.get(weatherKey);
+
+      if (cachedWeather) {
+        logger.info("Found Cached Restaurant Weather Data..", {
+          cachedWeather,
+        });
+
+        return sendSuccess(
+          res,
+          JSON.parse(cachedWeather),
+          "Successfully fetched weather for restaurant (cached)",
+        );
+      }
+
+      const restaurantKey = restaurantKeyById(restaurantId);
+      const coords = await client.hGet(restaurantKey, "location");
+
+      if (!coords) {
+        return sendError(res, "Missing Restaurant Co-ordinates..", 404, [
+          "Please ensure you have set Co-ordinates when making a new restaurant.",
+        ]);
+      }
+
+      const [lng, lat] = coords.split(",");
+
+      const apiResponse = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${process.env.WEATHER_API_KEY}&units=metric`,
+      );
+
+      const weatherData: any = await apiResponse.json();
+
+      if (weatherData.cod && Number(weatherData.cod) !== 200) {
+        logger.error("Weather API business error", weatherData);
+
+        return sendError(res, weatherData.message, 502, [
+          "Open Weather Failed To Fetch Weather",
+        ]);
+      }
+
+      await client.set(weatherKey, JSON.stringify(weatherData), {
+        EX: 600, // Cache restult for 10 mins
+      });
+
+      return sendSuccess(
+        res,
+        weatherData,
+        `Successfully fetched weather for ${restaurantId}`,
+        200,
+      );
+    } catch (error: any) {
+      logger.error(
+        "Failed to fetch the weather for this particular restaurant",
+        { error: error.message || error },
+      );
+
+      next(error);
+    }
+  },
+  //#endregion
+
+  //#region Fetch Restaurant Details
+  fetchRestaurantDetails: async (
+    req: Request<{ restaurantId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) => {},
   //#endregion
 };

@@ -12,17 +12,9 @@ restaurantRouter.get(
   restaurantController.fetchRestaurantRatings,
 );
 
-restaurantRouter.post(
-  "/create",
-  validate(RestaurantPostSchema),
-  restaurantController.createRestaurantData,
-);
-
-restaurantRouter.post(
-  "/create/:restaurantId/reviews",
-  checkRestaurantExists,
-  validate(ReviewPostSchema),
-  restaurantController.createRestaurantReview,
+restaurantRouter.get(
+  "/fetch/:restaurantId/weather",
+  restaurantController.fetchWeatherForARestaurant,
 );
 
 restaurantRouter.get(
@@ -35,6 +27,19 @@ restaurantRouter.get(
   "/fetch/:restaurantId/reviews",
   checkRestaurantExists,
   restaurantController.fetchRestaurantReviews,
+);
+
+restaurantRouter.post(
+  "/create",
+  validate(RestaurantPostSchema),
+  restaurantController.createRestaurantData,
+);
+
+restaurantRouter.post(
+  "/create/:restaurantId/reviews",
+  checkRestaurantExists,
+  validate(ReviewPostSchema),
+  restaurantController.createRestaurantReview,
 );
 
 restaurantRouter.delete(

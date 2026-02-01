@@ -8,6 +8,37 @@ export function getKeyName(...args: string[]) {
 }
 
 /**
+ * Strings
+ * - Binary safe data storage
+ * - Can store text, JSON, serialized objects, images, etc.
+ * - Maximum size: 512MB per string
+ * - - - - - - - - - - - -
+ * Redis Strings Cheat Sheet
+ * SET -> Sets the value of a key
+ * GET -> Retrieves the value of a key
+ * DEL -> Deletes a key
+ * EXISTS -> Checks if a key exists
+ * EXPIRE -> Sets a timeout on a key
+ * TTL -> Returns remaining time to live
+ * INCR/INCRBY -> Increments numeric value
+ * DECR/DECRBY -> Decrements numeric value
+ * APPEND -> Appends value to existing string
+ *
+ * Example: Weather Cache String
+ * Key: bites:weather:123
+ * ----------------------------------------
+ * Value: JSON string containing weather data
+ * '{"coord":{"lon":-0.1257,"lat":51.5085},"weather":[{"id":803,"main":"Clouds","description":"broken clouds","icon":"04d"}],"main":{"temp":15.6,"feels_like":15.2,"temp_min":14.5,"temp_max":16.8,"pressure":1012,"humidity":78},"visibility":10000,"wind":{"speed":3.6,"deg":240},"clouds":{"all":75},"dt":1643673600,"sys":{"type":2,"id":2075535,"country":"GB","sunrise":1643632000,"sunset":1643664000},"timezone":0,"id":2643743,"name":"London","cod":200}'
+ *
+ * Use Cases:
+ * - Caching API responses (weather data, user sessions)
+ * - Storing configuration values
+ * - Simple counters and flags
+ * - JSON serialization for complex objects
+ * - Image or file storage (up to 512MB)
+ */
+
+/**
  * Hashes
  * - Field-value Pairs
  * - Represent basic objects, counters, etc
@@ -144,3 +175,26 @@ export const restaurantCuisinesKeyById = (id: string) =>
  * Static variable to return the restaurantsByRating redis key.
  */
 export const restaurantsByRatingKey = getKeyName("restaurants_by_rating");
+
+/**
+ * Utility method to get the weather cache key for a specific restaurant.
+ * @param {string} id Unique restaurant id passed to reference in redis.
+ * @returns The key for storing cached weather data for the given restaurant id.
+ *
+ * Example Usage:
+ * - Stores cached OpenWeatherMap API response for 10 minutes
+ * - Used to reduce external API calls and improve response times
+ * - Contains JSON weather data with temperature, humidity, conditions, etc.
+ *
+ * Redis Key Structure:
+ * Key: bites:weather:restaurant123
+ * Value Type: String (JSON)
+ * TTL: 600 seconds (10 minutes)
+ *
+ * Example Stored Value:
+ * '{"coord":{"lon":-0.1257,"lat":51.5085},"weather":[{"id":803,"main":"Clouds","description":"broken clouds"}],"main":{"temp":15.6,"feels_like":15.2,"humidity":78},"name":"London","cod":200}'
+ */
+export const weatherKeyById = (id: string) => getKeyName("weather", id);
+
+export const restaurantDetailsKeyById = (id: string) =>
+  getKeyName("restaurant_details", id);

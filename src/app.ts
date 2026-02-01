@@ -1,3 +1,4 @@
+// import "dotenv/config";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { specs } from "./config/swagger.config.js";
@@ -15,15 +16,19 @@ app.use(express.json());
 //#endregion
 
 //#region Swagger Documentation
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, {
-  explorer: true,
-  customCss: `
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: `
     .swagger-ui .topbar { display: none }
     .swagger-ui .info { margin: 20px 0 }
     .swagger-ui .scheme-container { margin: 20px 0 }
   `,
-  customSiteTitle: "Bites API Documentation"
-}));
+    customSiteTitle: "Bites API Documentation",
+  }),
+);
 //#endregion
 
 //#region Endpoints
