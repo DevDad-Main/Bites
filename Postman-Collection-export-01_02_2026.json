@@ -1,0 +1,335 @@
+{
+  "info": {
+    "_postman_id": "5377505a-fa8b-4f0a-abce-e66981958144",
+    "name": "Bites",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "id": "4b983172-5384-41a2-bf58-042570e17b25",
+      "name": "Create Restauarant Details.",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\"links\": [\n  {\n    \"name\": \"Official Website\",\n    \"url\": \"https://example.com/home\"\n  },\n  {\n    \"name\": \"Reservations\",\n    \"url\": \"https://example.com/reservations\"\n  },\n  {\n    \"name\": \"Menu\",\n    \"url\": \"https://example.com/menu\"\n  },\n],\n  \"contact\": {\n    \"phone\": \"+1 (555) 123-4567\",\n    \"email\": \"info@test.com\"\n  },\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/create/u4fYyICQmpQtf7F2sWCkA/details",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "create",
+            "u4fYyICQmpQtf7F2sWCkA",
+            "details"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "3d614b65-2df9-4b11-9590-f1931dcce017",
+      "name": "Create Restaurant Data",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\"name\": \"Better Slow Foods\",\n\"location\": \"0,0\",\n\"cuisines\": [\"romanian\", \"english\"]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/create",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "create"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "34049512-3302-4a9f-846d-90698c442cee",
+      "name": "Create Restaurant Review",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n\"review\": \"It was an okay meal definitely wouldnt do it again.\",\n\"rating\": 3,\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/create/e2-83aokEWqaMNzdtAmS7/reviews",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "create",
+            "e2-83aokEWqaMNzdtAmS7",
+            "reviews"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "df2d053a-0794-480b-bd2d-dc68e7ae6b50",
+      "name": "Delete  a restaurant review",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/delete/va22oo86BPEeLo11FhCMn/reviews/YyHGY_ssIgn6rQlOBVRcH",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "delete",
+            "va22oo86BPEeLo11FhCMn",
+            "reviews",
+            "YyHGY_ssIgn6rQlOBVRcH"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "903c4831-4d07-43b0-aa74-5f09aac80316",
+      "name": "Fetch A Restaurants Details.",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/fetch/u4fYyICQmpQtf7F2sWCkA/details",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "fetch",
+            "u4fYyICQmpQtf7F2sWCkA",
+            "details"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "7c34bfe0-67eb-4be3-82d6-f55b194838d1",
+      "name": "Fetch All Cuisines Data",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/cuisines/fetch",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cuisines",
+            "fetch"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "7a885d71-7306-4c07-acab-d61d8b8a6da5",
+      "name": "Fetch All Restaurant Reviews",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/fetch/d1BaewvlRigpe2Ah7uL_l/reviews",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "fetch",
+            "d1BaewvlRigpe2Ah7uL_l",
+            "reviews"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "4c5eeda1-b7fd-49b6-9632-250fcfee2d50",
+      "name": "Fetch Restaurant Ratings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/fetch/restaurant-ratings",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "fetch",
+            "restaurant-ratings"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "8e73e688-2e55-491c-b1fa-bfdfb9aed38f",
+      "name": "Fetch Restaurant Weather.",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/fetch/u4fYyICQmpQtf7F2sWCkA/weather/",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "fetch",
+            "u4fYyICQmpQtf7F2sWCkA",
+            "weather"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "78b41d66-753f-4670-8d44-1f799c78b875",
+      "name": "Fetch Restaurants by specific cuisine",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/cuisines/fetch/italian",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "cuisines",
+            "fetch",
+            "italian"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "74444372-4321-4944-896a-93c1d0a6aa6a",
+      "name": "Feth Restaurant Review By Id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/fetch/u4fYyICQmpQtf7F2sWCkA",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "fetch",
+            "u4fYyICQmpQtf7F2sWCkA"
+          ],
+          "protocol": "http"
+        }
+      },
+      "response": [],
+      "event": []
+    },
+    {
+      "id": "42c391e1-b2a1-4a1b-a0dc-3423541cd633",
+      "name": "Search Restaurants By Query",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/v1/restaurants/search",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "restaurants",
+            "search"
+          ],
+          "protocol": "http",
+          "query": [
+            {
+              "key": "query",
+              "value": "better",
+              "disabled": false
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": []
+    }
+  ]
+}
